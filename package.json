@@ -1,0 +1,19 @@
+{
+  "name": "tr-wait-time-fns",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "twilio-run",
+    "deploy": "twilio-run deploy"
+  },
+  "dependencies": {
+    "twilio": "^3.56"
+  },
+  "devDependencies": {
+    "twilio-run": "^3.0.1"
+  },
+  "engines": {
+    "node": "12"
+  }
+}

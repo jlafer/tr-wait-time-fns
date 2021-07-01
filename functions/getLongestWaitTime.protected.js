@@ -1,19 +1,29 @@
+let path = Runtime.getFunctions()['helpers'].path;
+let helpers = require(path);
+const {
+  getAndVerifyEnvVars, getQueueDocByName, getTaskQueueByName,
+  getQueueStatsFromApi, createQueueStatSyncDoc
+} = helpers;
+
 exports.handler = async function(context, event, callback) {
   try {
     const {queueName} = event;
-    const {WORKSPACE_SID} = context;
     const client = context.getTwilioClient();
+    const envVars = getAndVerifyEnvVars(context);
+    const {SYNC_SERVICE_SID, WORKSPACE_SID} = envVars;
 
-    const stats = await client.taskrouter.workspaces(WORKSPACE_SID)
-    .taskQueues('WQc046d4515b9c5259e6562f6f79518fb7')
-    .realTimeStatistics()
-    .fetch();
-    console.log('age: ', stats.longestTaskWaitingAge);
-    
-    return callback(null, {waitTime: stats.longestTaskWaitingAge});
+    let queueDoc = await getQueueDocByName(client, SYNC_SERVICE_SID, queueName);
+    if (!queueDoc) {
+      const queue = await getTaskQueueByName(client, WORKSPACE_SID, queueName);
+      const stats = await getQueueStatsFromApi(client, WORKSPACE_SID, queue.sid);
+      queueDoc = await createQueueStatSyncDoc(client, SYNC_SERVICE_SID, queue, stats)
+    }
+    const stat = queueDoc.data.stat;
+    console.log('waitTime: ', stat);
+    return callback(null, {queue: queueName, sid: queueDoc.data.sid, waitTime: stat});
   }
   catch (error) {
     console.log(error);
-    callback(error, 'Something went wrong');
+    callback(error, 'getLongestWaitTime: something went wrong');
   }
 };

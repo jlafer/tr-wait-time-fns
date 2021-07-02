@@ -27,12 +27,12 @@ const getQueuesFromApi = (client, wrkspcSid) => {
   return client.taskrouter.workspaces(wrkspcSid).taskQueues.list({limit: 50});
 };
 
-const createQueueStatSyncDoc = (client, syncSvcSid, queue, stats) => {
+const createQueueStatSyncDoc = (client, syncSvcSid, ttl, queue, stats) => {
   const {friendlyName, sid} = queue;
   return client.sync.services(syncSvcSid).documents.create({
     uniqueName: friendlyName,
     data: {sid: sid, stat: stats.longestTaskWaitingAge},
-    ttl: 180
+    ttl: ttl
   });
 };
 
@@ -47,7 +47,7 @@ function getAndVerifyEnvVars(context) {
   const envVars = {};
   envVars.WORKSPACE_SID = checkEnvVariable(context, 'WORKSPACE_SID');
   envVars.SYNC_SERVICE_SID = checkEnvVariable(context, 'SYNC_SERVICE_SID');
-  envVars.STAT_TTL = 180;
+  envVars.STAT_TTL = checkEnvVariable(context, 'STAT_TTL', 180);
   return envVars;
 }
 

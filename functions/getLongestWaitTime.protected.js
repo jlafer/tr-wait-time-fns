@@ -10,13 +10,13 @@ exports.handler = async function(context, event, callback) {
     const {queueName} = event;
     const client = context.getTwilioClient();
     const envVars = getAndVerifyEnvVars(context);
-    const {SYNC_SERVICE_SID, WORKSPACE_SID} = envVars;
+    const {SYNC_SERVICE_SID, WORKSPACE_SID, STAT_TTL} = envVars;
 
     let queueDoc = await getQueueDocByName(client, SYNC_SERVICE_SID, queueName);
     if (!queueDoc) {
       const queue = await getTaskQueueByName(client, WORKSPACE_SID, queueName);
       const stats = await getQueueStatsFromApi(client, WORKSPACE_SID, queue.sid);
-      queueDoc = await createQueueStatSyncDoc(client, SYNC_SERVICE_SID, queue, stats)
+      queueDoc = await createQueueStatSyncDoc(client, SYNC_SERVICE_SID, STAT_TTL, queue, stats)
     }
     const stat = queueDoc.data.stat;
     console.log('waitTime: ', stat);
